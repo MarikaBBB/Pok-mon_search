@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Search</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        label, output {
+            display: block;
+        }
+
+        label {
+            margin-bottom: 0.25rem;
+        }
+
+        output {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        output h2 {
+            color: #333;
+        }
+
+        output img {
+            width: 100px;
+            height: 100px;
+            margin-top: 10px;
+        }
+
+        output ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        output ul li {
+            margin-bottom: 5px;
+        }
+
+        form {
+            max-width: 300px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        button {
+            background: #572938;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #401c27;
+        }
+
+        @media screen and (max-width: 480px) {
+            .container {
+                padding: 0 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <form>
+            <h1>Pokémon Search</h1>
+            <label for="pokemon">Pokémon Name:</label>
+            <input id="pokemon" name="pokemon" type="search" required />
+
+            <button type="submit">Search</button>
+            <output></output>
+        </form>
+    </div>
+
+    <script>
+        const form = document.querySelector("form");
+        const output = document.querySelector("output");
+
+        form.addEventListener("submit", event => {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            const name = formData.get("pokemon");
+
+            // Show a loading message
+            output.textContent = "Loading...";
+
+            fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
+                .then(response => {
+                    if (!response.ok) throw new Error(response.status.toString());
+                    return response.json();
+                })
+                .then(pokemonData => {
+                    const heading = document.createElement("h2");
+                    heading.textContent = pokemonData.name;
+
+                    const image = document.createElement("img");
+                    image.src = pokemonData.sprites.front_default;
+                    image.alt = pokemonData.name + " image";
+
+                    const types = pokemonData.types.map(type => type.type.name).join(", ");
+                    const statsList = document.createElement("ul");
+                    pokemonData.stats.forEach(stat => {
+                        const listItem = document.createElement("li");
+                        listItem.textContent = `${stat.stat.name}: ${stat.base_stat}`;
+                        statsList.appendChild(listItem);
+                    });
+
+                    output.innerHTML = "";
+                    output.append(heading, image, document.createTextNode(`Types: ${types}`), statsList);
+                })
+                .catch(error => {
+                    console.error(error);
+
+                    if (error.message === "404") {
+                        output.textContent = "Pokémon not found.";
+                    } else {
+                        output.textContent = "⚠️ Something went wrong";
+                    }
+                });
+        });
+    </script>
+</body>
+</html>
+
